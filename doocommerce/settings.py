@@ -38,7 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'debug_toolbar',
-    'store'
+    'core',
+    'store',
+    'tags'
 ]
 
 INTERNAL_IPS = [
@@ -83,8 +85,12 @@ WSGI_APPLICATION = 'doocommerce.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'doocommerce',
+        'USER': 'root',
+        'PASSWORD': 'password2025',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
     }
 }
 
@@ -130,3 +136,4 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+AUTH_USER_MODEL = 'core.User'
