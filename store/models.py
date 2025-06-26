@@ -88,6 +88,8 @@ class OrderItem(models.Model):
     # one order can have many order 
     order = models.ForeignKey(Order, on_delete=models.PROTECT)
     # one product can have many order
+    # default related name -> <model_name>_ set ==> orderitem_set
+    # to access from products => product.orderitem_set
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
     quantity = models.PositiveSmallIntegerField()
     price = models.DecimalField(max_digits=6, decimal_places=2)
