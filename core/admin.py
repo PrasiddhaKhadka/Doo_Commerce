@@ -5,10 +5,21 @@ from . import models
 from store.admin import ProductAdmin
 from tags.models import TaggedItem
 from django.contrib.contenttypes.admin import GenericTabularInline
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+
 # Register your models here.
 @admin.register(models.User)
-class UserAdmin(admin.ModelAdmin):
-    list_display = ['username', 'email', 'first_name', 'last_name']
+class UserAdmin(BaseUserAdmin):
+  
+    add_fieldsets = (
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": ("username", "usable_password", "password1", "password2","email", "first_name", "last_name"),
+            },
+        ),
+    )
 
 
 

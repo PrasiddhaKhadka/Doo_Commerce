@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 from uuid import uuid4
+from django.conf import settings
 
 # Create your models here.
 class Collection(models.Model):
@@ -48,18 +49,16 @@ class Customer(models.Model):
         (MEMBERSHIP_SILVER, 'Silver'),
         (MEMBERSHIP_GOLD, 'Gold')
     ]
-    first_name = models.CharField(max_length=255)
-    last_name = models.CharField(max_length=255)
-    email = models.EmailField(unique=True)
     phone = models.CharField(max_length=100)
     birth_date = models.DateField(null=True)
     membership = models.CharField(max_length=1, choices=MEMBERSHIP_CHOICES, default=MEMBERSHIP_BRONZE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
-        return f'{self.first_name} {self.last_name}'
+        return f'{self.user.first_name} {self.user.last_name}'
     
     class Meta:
-        ordering = ['first_name', 'last_name']
+        ordering = ['user__first_name', 'user__last_name']
         verbose_name = 'Customer'
         verbose_name_plural = 'Customers'
         app_label = 'store'
@@ -83,6 +82,9 @@ class Order(models.Model):
         verbose_name_plural = 'Orders'
         app_label = 'store'
         ordering = ['-placed_at']
+        permissions = [
+            ('cancel_order', 'Can cancel order')
+        ]
     
 class OrderItem(models.Model):
     # one order can have many order 
@@ -100,11 +102,11 @@ class Cart(models.Model):
 
 class CartItem(models.Model):
     # one cart can have many cart item
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE,related_name='items')
     # one product can be in many cart item
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveSmallIntegerField(validators=[MinValueValidator(1)])
-    price = models.DecimalField(max_digits=6, decimal_places=2)
+    price = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
 
     class Meta:
         unique_together=['cart', 'product']
@@ -123,3 +125,6 @@ class Review(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
     date = models.DateField(auto_now_add=True)
+
+
+# class 

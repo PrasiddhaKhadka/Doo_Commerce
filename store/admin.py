@@ -78,13 +78,25 @@ class ProductAdmin(admin.ModelAdmin):
 class CustomerAdmin(admin.ModelAdmin):
     list_display = ['first_name', 'last_name', 'membership','order_count']
     list_editable = ['membership']
-    ordering = ['first_name', 'last_name']
+    list_select_related = ['user']
+    ordering = ['user__first_name', 'user__last_name']
     search_fields = ['first_name__istartswith', 'last_name__istartswith']
 
     def get_queryset(self, request: HttpRequest) -> QuerySet:
         return super().get_queryset(request).annotate(
             order_count = Count('order')
         )
+    
+    def __str__(self) -> str:
+        return f'{self.user.first_name} {self.user.last_name}'
+    
+    
+    def first_name(self, customer: models.Customer):
+        return customer.user.first_name
+    
+    def last_name(self, customer: models.Customer):
+        return customer.user.last_name
+    
     @admin.display(ordering='order_count')
     def order_count(self, order: models.Order):
         return order.order_count
@@ -106,3 +118,12 @@ class OrderAdmin(admin.ModelAdmin):
     search_fields = ['customer__first_name__istartswith', 'customer__last_name__istartswith']
     autocomplete_fields = ['customer']
     inlines = [OrderItemInline]
+
+
+@admin.register(models.Cart)
+class CartAdmin(admin.ModelAdmin):
+    list_display = [ 'created_at']
+
+@admin.register(models.CartItem)
+class CartItemAdmin(admin.ModelAdmin):
+    list_display = ['cart', 'product', 'quantity']
