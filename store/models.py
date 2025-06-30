@@ -62,6 +62,9 @@ class Customer(models.Model):
         verbose_name = 'Customer'
         verbose_name_plural = 'Customers'
         app_label = 'store'
+        permissions = [
+            ('view_history', 'Can view history')
+        ]
 
 class Order(models.Model):
     PAYMENT_STATUS_PENDING = 'P'

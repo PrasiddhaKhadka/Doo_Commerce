@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from store.models import Cart, CartItem, Product, Collection, Review
+from store.models import Cart, CartItem, Product, Collection, Customer,  Review
 from decimal import Decimal
 from django.shortcuts import get_object_or_404
 
@@ -104,3 +104,14 @@ class DeleteCartItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = CartItem
         fields = ['id']
+
+
+class CustomerSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(read_only=True)
+    class Meta:
+        model = Customer
+        fields = ['id', 'user_id', 'phone', 'birth_date', 'membership']
+
+    def update(self, instance, validated_data):
+        validated_data.pop('user', None)  # don't allow user to be updated
+        return super().update(instance, validated_data)

@@ -1,21 +1,26 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.mixins import  CreateModelMixin,DestroyModelMixin, RetrieveModelMixin
+from rest_framework.mixins import  CreateModelMixin,DestroyModelMixin, UpdateModelMixin, RetrieveModelMixin
 from store.filters import ProductFilter
-from store.models import Cart, Product, Collection, Review, CartItem
-from store.serializers import CartSerializer, ProductSerializer, CollectionSerializer, ReviewSerializer, CartItemSerializer,AddCartItemSerializer,UpdateCartItemSerializer, DeleteCartItemSerializer
+from store.models import Cart, Product, Collection, Review, CartItem,Customer
+from store.permission import FullDjangoModelPermissions, IsAdminOrReadOnly, ViewCustomerHistoryPermission
+from store.serializers import CartSerializer, ProductSerializer, CustomerSerializer, CollectionSerializer, ReviewSerializer, CartItemSerializer,AddCartItemSerializer,UpdateCartItemSerializer, DeleteCartItemSerializer
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, DjangoModelPermissions
 
 
 class CollectionViewSet(ModelViewSet):
      queryset = Collection.objects.annotate(products_count=Count('products')).all()
      serializer_class = CollectionSerializer
+     filter_backends = [DjangoFilterBackend, SearchFilter]
+     permission_classes = [IsAdminOrReadOnly]
      def destroy(self, request, *args, **kwargs):
          collection = get_object_or_404(Collection.objects.annotate(products_count=Count('products')), pk=kwargs['pk'])
          if collection.products.count()>0:
@@ -35,6 +40,7 @@ class ProductViewSet(ModelViewSet):
      search_fields = ['title', 'description']
      ordering_fields = ['price', 'last_update']
      pagination_class = PageNumberPagination
+     permission_classes = [IsAdminOrReadOnly]
      def destroy(self, request, pk):
           product = get_object_or_404(Product,pk = pk)
           if product.orderitem_set.count()>0:
@@ -85,3 +91,34 @@ class CartItemViewSet(ModelViewSet):
      def get_queryset(self):
           return CartItem.objects.select_related('product').filter(cart_id=self.kwargs['cart_pk'])
       
+
+class CustomerViewSet(ModelViewSet):
+     queryset = Customer.objects.all()
+     serializer_class = CustomerSerializer
+     permission_classes = [IsAdminUser]
+
+     @action(detail=True, methods=['GET'],permission_classes=[ViewCustomerHistoryPermission])
+     def history(self, request, pk):
+          return Response('ok')
+
+     @action(detail=False, methods=['GET', 'PUT', 'PATCH'] , permission_classes=[IsAuthenticated])
+     def me(self, request):
+          (customer, created) = Customer.objects.get_or_create(user_id=request.user.id)
+          if request.method == 'GET':
+               serializer = CustomerSerializer(customer)
+               return Response(serializer.data)
+          elif request.method == 'PUT':
+               serializer = CustomerSerializer(customer, data=request.data)
+               serializer.is_valid(raise_exception=True)
+               serializer.save()
+               return Response(serializer.data)
+          elif request.method == 'PATCH':
+               serializer = CustomerSerializer(customer, data=request.data, partial=True)
+               serializer.is_valid(raise_exception=True)
+               serializer.save()
+               return Response(serializer.data)
+          # (customer) = Customer.objects.get_or_create(user_id=request.user.id)
+          # serializer = CustomerSerializer(customer) 
+          # return Response(serializer.data)
+
+
