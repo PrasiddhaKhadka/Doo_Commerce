@@ -88,10 +88,11 @@ class Order(models.Model):
         permissions = [
             ('cancel_order', 'Can cancel order')
         ]
+
     
 class OrderItem(models.Model):
     # one order can have many order 
-    order = models.ForeignKey(Order, on_delete=models.PROTECT)
+    order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name='order_items')
     # one product can have many order
     # default related name -> <model_name>_ set ==> orderitem_set
     # to access from products => product.orderitem_set
